@@ -68,11 +68,51 @@ Future<List<FontEntry>> parseManifestAsset() async {
   return result;
 }
 
+/// Drops fonts whose digit "1" lays out like a replacement glyph (wide block) or
+/// is effectively missing — same pool as clock digits, must read cleanly on device.
+bool _clockFontDigitsLookSane(String fontFamily) {
+  const size = 96.0;
+  final baseStyle = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: size,
+    fontWeight: FontWeight.w500,
+    height: 1.0,
+  );
+  double measure(String ch) {
+    final tp = TextPainter(
+      text: TextSpan(text: ch, style: baseStyle),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return tp.width;
+  }
+
+  final w0 = measure('0');
+  final w1 = measure('1');
+  final w4 = measure('4');
+  final w8 = measure('8');
+  if (w0 < 0.5 || w1 < 0.5 || w4 < 0.5 || w8 < 0.5) {
+    return false;
+  }
+  // Glitchy fonts often render "1" as a huge horizontal slab vs other digits.
+  if (w1 > w0 * 4.0 || w1 > w4 * 4.0 || w1 > w8 * 4.0) {
+    return false;
+  }
+  // Collapsed / empty glyph for "1"
+  if (w1 < w0 * 0.06 || w1 < w8 * 0.06) {
+    return false;
+  }
+  return true;
+}
+
 Future<FontEntry?> tryRegisterFontEntry(FontEntry e) async {
   try {
     final loader = FontLoader(e.fontFamily);
     loader.addFont(rootBundle.load('assets/fonts/${e.file}'));
     await loader.load();
+    if (!_clockFontDigitsLookSane(e.fontFamily)) {
+      debugPrint('Font rejected (digit metrics): ${e.file}');
+      return null;
+    }
     return e;
   } catch (err, st) {
     debugPrint('Font load failed (${e.fontFamily}): $err');
