@@ -47,20 +47,6 @@ flutter build apk --release
 
 Grant **camera** permission when prompted so ambient background switching works.
 
-## GitHub Releases (CI)
-
-Workflow [`.github/workflows/release-apk.yml`](.github/workflows/release-apk.yml) builds a **release APK** and publishes a **GitHub Release**.
-
-| Trigger | What happens |
-|--------|----------------|
-| **Push to `main`** | On every push to `main` (including merges), builds and publishes a release with tag `release-YYMMDD-<run_id>` (UTC date). |
-| **Manual** | **Actions** → **Release APK** → **Run workflow**. Same release naming as above. |
-| **Tag push** | Push a tag matching `v*` (for example `v1.0.0`). The APK is attached to the release for that tag. |
-
-Android **`versionName`** and **`versionCode`** are set to **YYMMDD** (UTC), e.g. `260509`.
-
-The project currently signs release APKs with the **debug** keystore (same as local `flutter build apk --release`). For Play Store–style signing, configure your keystore and pass secrets in CI.
-
 ## Project layout
 
 | Path | Purpose |
