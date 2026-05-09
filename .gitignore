@@ -1,0 +1,52 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / VS Code
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Flutter & Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+*.g.dart
+
+# Symbolication / obfuscation (release)
+app.*.symbols
+
+# Android
+**/local.properties
+**/captures/
+*.keystore
+*.jks
+**/key.properties
+android/.gradle/
+
+# Python venv (font pipeline)
+scripts/.venv/
+
+# Local debug captures
+.tmp_*.txt
+
+# Generated font subsets (regenerate with scripts/fetch_fonts.py)
+assets/fonts/*.ttf
+assets/fonts/*.otf
