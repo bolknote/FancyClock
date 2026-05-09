@@ -1,0 +1,90 @@
+# Builds a release APK and publishes a GitHub Release.
+# Version: YYMMDD (UTC) for both Android versionName/versionCode.
+#
+# Triggers:
+#   - Manual: Actions → "Release APK" → Run workflow
+#   - Tag push: push tag matching v* (e.g. v1.0.0)
+
+name: Release APK
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-apk-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Compute version (YYMMDD UTC)
+        id: ver
+        run: echo "yy_mm_dd=$(date -u +%y%m%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Dependencies
+        run: flutter pub get
+
+      - name: Build release APK
+        env:
+          VERSION: ${{ steps.ver.outputs.yy_mm_dd }}
+        run: |
+          flutter build apk --release \
+            --build-name="$VERSION" \
+            --build-number="$VERSION"
+
+      - name: Prepare artifact name
+        env:
+          VERSION: ${{ steps.ver.outputs.yy_mm_dd }}
+        run: |
+          SRC="build/app/outputs/flutter-apk/app-release.apk"
+          DST="fancy-clock-${VERSION}.apk"
+          cp "$SRC" "$DST"
+          echo "ARTIFACT_PATH=$DST" >> "$GITHUB_ENV"
+          ls -la "$DST"
+
+      # Tag push (e.g. v1.0.0): attach APK to that tag’s release.
+      - name: Publish GitHub Release (tag)
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ARTIFACT_PATH }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Manual run: unique tag per workflow so the same calendar day can run again.
+      - name: Publish GitHub Release (manual)
+        if: github.event_name == 'workflow_dispatch'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-${{ steps.ver.outputs.yy_mm_dd }}-${{ github.run_id }}
+          name: FancyClock ${{ steps.ver.outputs.yy_mm_dd }}
+          body: |
+            Automated build. Android versionName and versionCode are YYMMDD in UTC (${{ steps.ver.outputs.yy_mm_dd }}).
+          files: ${{ env.ARTIFACT_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
