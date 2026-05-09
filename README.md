@@ -2,6 +2,9 @@
 
 FancyClock is a Flutter app for square Android displays. It shows local time as **HH:mm** (updates each minute). Each digit uses a random subset font from a bundled pool (digits `0–9` only) plus a contrasting color. The background switches between near-black and milk white using rear-camera luminance with hysteresis so bright rooms get a softer skin without flicker.
 
+<img width="1000" height="562" src="https://github.com/user-attachments/assets/f3d0a310-642a-4f1e-809d-9cac5f094a90" />
+
+
 ## Features
 
 - **Random typography**: many Google Fonts families (subset to digits only), one random font per digit each minute.
