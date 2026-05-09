@@ -2,14 +2,17 @@
 # Version: YYMMDD (UTC) for both Android versionName/versionCode.
 #
 # Triggers:
+#   - Push to main: automatic build + GitHub Release (tag release-YYMMDD-<run_id>)
 #   - Manual: Actions → "Release APK" → Run workflow
-#   - Tag push: push tag matching v* (e.g. v1.0.0)
+#   - Tag push: push tag matching v* (e.g. v1.0.0) — APK attached to that tag’s release
 
 name: Release APK
 
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
@@ -76,15 +79,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Manual run: unique tag per workflow so the same calendar day can run again.
-      - name: Publish GitHub Release (manual)
-        if: github.event_name == 'workflow_dispatch'
+      # Push to main or manual: unique tag per run (same day can run multiple times).
+      - name: Publish GitHub Release (branch / manual)
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: release-${{ steps.ver.outputs.yy_mm_dd }}-${{ github.run_id }}
           name: FancyClock ${{ steps.ver.outputs.yy_mm_dd }}
           body: |
-            Automated build. Android versionName and versionCode are YYMMDD in UTC (${{ steps.ver.outputs.yy_mm_dd }}).
+            Automated build (${{ github.event_name }}). Android versionName and versionCode are YYMMDD in UTC (${{ steps.ver.outputs.yy_mm_dd }}).
           files: ${{ env.ARTIFACT_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

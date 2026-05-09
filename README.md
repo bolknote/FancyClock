@@ -53,7 +53,8 @@ Workflow [`.github/workflows/release-apk.yml`](.github/workflows/release-apk.yml
 
 | Trigger | What happens |
 |--------|----------------|
-| **Manual** | **Actions** → **Release APK** → **Run workflow**. Creates a release with tag `release-YYMMDD-<run_id>` (UTC date). |
+| **Push to `main`** | On every push to `main` (including merges), builds and publishes a release with tag `release-YYMMDD-<run_id>` (UTC date). |
+| **Manual** | **Actions** → **Release APK** → **Run workflow**. Same release naming as above. |
 | **Tag push** | Push a tag matching `v*` (for example `v1.0.0`). The APK is attached to the release for that tag. |
 
 Android **`versionName`** and **`versionCode`** are set to **YYMMDD** (UTC), e.g. `260509`.
