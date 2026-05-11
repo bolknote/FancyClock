@@ -1,7 +1,14 @@
 import 'package:flutter/painting.dart';
 
-/// After [FontLoader.load], rejects fonts where any digit 0–9 measures like a
-/// slab, barcode, or missing glyph (subset / device quirks).
+/// Heuristic filter after [FontLoader.load]: rejects digits whose **layout**
+/// (TextPainter width/height) looks like a missing glyph, slab, or extreme
+/// outlier vs other digits.
+///
+/// **Limitation:** Skia may assign “normal” bounds to a glyph that still draws
+/// badly on screen (e.g. barcode-like “9” on some devices). Host `flutter test`
+/// and Android can disagree. Those cases need a device-side check, golden test,
+/// or a filename/stem ban once the `.ttf` is identified (same idea as `_Guides`
+/// in the manifest parser).
 bool clockFontDigitsLookSane(String fontFamily) {
   const size = 96.0;
   const digits = '0123456789';
