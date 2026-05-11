@@ -68,38 +68,86 @@ Future<List<FontEntry>> parseManifestAsset() async {
   return result;
 }
 
-/// Drops fonts whose digit "1" lays out like a replacement glyph (wide block) or
-/// is effectively missing — same pool as clock digits, must read cleanly on device.
+/// Drops subset fonts where any digit 0–9 lays out as a slab, barcode, or empty
+/// glyph (common with broken subsets or odd display fonts on device).
 bool _clockFontDigitsLookSane(String fontFamily) {
   const size = 96.0;
+  const digits = '0123456789';
   final baseStyle = TextStyle(
     fontFamily: fontFamily,
     fontSize: size,
     fontWeight: FontWeight.w500,
     height: 1.0,
   );
-  double measure(String ch) {
+
+  double medianDoubles(List<double> values) {
+    final s = List<double>.from(values)..sort();
+    final n = s.length;
+    if (n == 0) {
+      return 0;
+    }
+    final mid = n ~/ 2;
+    return n.isOdd ? s[mid] : (s[mid - 1] + s[mid]) / 2;
+  }
+
+  final widths = <double>[];
+  final heights = <double>[];
+  for (final ch in digits.split('')) {
     final tp = TextPainter(
       text: TextSpan(text: ch, style: baseStyle),
       textDirection: TextDirection.ltr,
     )..layout();
-    return tp.width;
+    widths.add(tp.width);
+    heights.add(tp.height);
   }
 
-  final w0 = measure('0');
-  final w1 = measure('1');
-  final w4 = measure('4');
-  final w8 = measure('8');
-  if (w0 < 0.5 || w1 < 0.5 || w4 < 0.5 || w8 < 0.5) {
+  final mw = medianDoubles(widths);
+  final mh = medianDoubles(heights);
+  if (mw < 1.0 || mh < 1.0) {
     return false;
   }
-  // Glitchy fonts often render "1" as a huge horizontal slab vs other digits.
-  if (w1 > w0 * 4.0 || w1 > w4 * 4.0 || w1 > w8 * 4.0) {
+
+  // Median of widths excluding "1" — thin "1" must not shrink the reference.
+  final refBodyWidths = <double>[
+    widths[0],
+    widths[2],
+    widths[3],
+    widths[4],
+    widths[5],
+    widths[6],
+    widths[7],
+    widths[8],
+    widths[9],
+  ]..sort();
+  final refW = refBodyWidths[refBodyWidths.length ~/ 2];
+
+  for (var i = 0; i < 10; i++) {
+    final w = widths[i];
+    final h = heights[i];
+    if (w < 0.5 || h < 0.5) {
+      return false;
+    }
+    // Wide glitch: horizontal slab "1", vertical-bar "9", etc.
+    if (w > mw * 3.8 || w > refW * 4.2) {
+      return false;
+    }
+    // Stacked / odd vertical glitch: height outlier vs peers.
+    if (h > mh * 2.4) {
+      return false;
+    }
+  }
+
+  final w1 = widths[1];
+  if (w1 < refW * 0.04 || w1 > refW * 4.2) {
     return false;
   }
-  // Collapsed / empty glyph for "1"
-  if (w1 < w0 * 0.06 || w1 < w8 * 0.06) {
-    return false;
+  for (var i = 0; i < 10; i++) {
+    if (i == 1) {
+      continue;
+    }
+    if (widths[i] < refW * 0.1) {
+      return false;
+    }
   }
   return true;
 }
