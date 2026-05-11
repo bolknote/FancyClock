@@ -299,7 +299,10 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   final math.Random _rng = math.Random.secure();
 
   Timer? _timer;
+  Timer? _cameraRestartTimer;
   CameraController? _cameraController;
+  /// False while tearing down or before stream starts — image callback must bail early.
+  bool _ambientStreamActive = false;
   DateTime _lastLightSample = DateTime.fromMillisecondsSinceEpoch(0);
   Color _background = clockBackground;
   bool _brightMode = false;
@@ -319,19 +322,60 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     WidgetsBinding.instance.addObserver(this);
     _lastShown = DateTime.now().toLocalFormatted();
     slots = _buildSlots(_lastShown);
-    _initAmbientLightCamera();
+    unawaited(_initAmbientLightCamera());
     _scheduleAlignedTicker();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    final cam = _cameraController;
-    if (cam != null) {
-      cam.dispose();
-    }
+    _cameraRestartTimer?.cancel();
     _timer?.cancel();
+    final cam = _cameraController;
+    unawaited(_tearDownCamera(cam));
     super.dispose();
+  }
+
+  Future<void> _tearDownCamera(CameraController? cam) async {
+    _ambientStreamActive = false;
+    _cameraController = null;
+    if (cam == null) {
+      return;
+    }
+    try {
+      if (cam.value.isInitialized && cam.value.isStreamingImages) {
+        await cam.stopImageStream();
+      }
+    } catch (err) {
+      debugPrint('Ambient camera stopImageStream: $err');
+    }
+    try {
+      await cam.dispose();
+    } catch (err) {
+      debugPrint('Ambient camera dispose: $err');
+    }
+  }
+
+  void _scheduleAmbientCameraRestart() {
+    _cameraRestartTimer?.cancel();
+    _cameraRestartTimer = Timer.periodic(const Duration(hours: 6), (_) {
+      if (mounted) {
+        unawaited(_restartAmbientCameraForStability());
+      }
+    });
+  }
+
+  Future<void> _restartAmbientCameraForStability() async {
+    final cam = _cameraController;
+    if (cam == null || !mounted) {
+      return;
+    }
+    debugPrint('Ambient camera periodic restart');
+    await _tearDownCamera(cam);
+    if (!mounted) {
+      return;
+    }
+    await _initAmbientLightCamera();
   }
 
   @override
@@ -339,14 +383,12 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     if (state == AppLifecycleState.resumed) {
       _tick(force: true);
       if (_cameraController == null) {
-        _initAmbientLightCamera();
+        unawaited(_initAmbientLightCamera());
       }
     } else if (state == AppLifecycleState.paused) {
+      _cameraRestartTimer?.cancel();
       final cam = _cameraController;
-      if (cam != null) {
-        cam.dispose();
-        _cameraController = null;
-      }
+      unawaited(_tearDownCamera(cam));
     }
   }
 
@@ -361,6 +403,9 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     final perm = await Permission.camera.request();
     if (!perm.isGranted) {
       debugPrint('Camera permission denied: $perm');
+      return;
+    }
+    if (!mounted) {
       return;
     }
     final selected = widget.cameras.firstWhere(
@@ -380,7 +425,11 @@ class _FancyClockScreenState extends State<FancyClockScreen>
         return;
       }
       _cameraController = controller;
+      _ambientStreamActive = true;
       await controller.startImageStream((image) {
+        if (!_ambientStreamActive || !mounted) {
+          return;
+        }
         final now = DateTime.now();
         if (now.difference(_lastLightSample) <
             const Duration(milliseconds: 300)) {
@@ -394,14 +443,24 @@ class _FancyClockScreenState extends State<FancyClockScreen>
         if ((updated.r - _background.r).abs() > 0.008 ||
             (updated.g - _background.g).abs() > 0.008 ||
             (updated.b - _background.b).abs() > 0.008) {
+          if (!mounted || !_ambientStreamActive) {
+            return;
+          }
           setState(() {
             _background = updated;
-            slots = _buildSlots(_lastShown);
+            // Only refresh contrast — reshuffling fonts every frame hammers the UI
+            // and allocates; keep fonts until the minute tick.
+            slots = _recolorSlots(_lastShown, updated);
           });
         }
       });
+      if (mounted) {
+        _scheduleAmbientCameraRestart();
+      }
     } catch (err) {
       debugPrint('Ambient light camera init failed: $err');
+      _ambientStreamActive = false;
+      _cameraController = null;
       try {
         await controller.dispose();
       } catch (_) {}
@@ -486,6 +545,33 @@ class _FancyClockScreenState extends State<FancyClockScreen>
               : (families.isNotEmpty
                   ? families[_rng.nextInt(families.length)].fontFamily
                   : null),
+        );
+      },
+      growable: false,
+    );
+  }
+
+  /// Same fonts as [slots], new colors for contrast when only the background changes.
+  List<DigitStyle> _recolorSlots(String hhmmColon, Color background) {
+    final prev = slots;
+    if (prev.length != hhmmColon.length) {
+      return _buildSlots(hhmmColon);
+    }
+    for (var i = 0; i < hhmmColon.length; i++) {
+      if (prev[i].character != hhmmColon.substring(i, i + 1)) {
+        return _buildSlots(hhmmColon);
+      }
+    }
+    return List<DigitStyle>.generate(
+      hhmmColon.length,
+      (i) {
+        final ch = hhmmColon.substring(i, i + 1);
+        final isSeparator = ch == ':';
+        final old = prev[i];
+        return DigitStyle(
+          character: ch,
+          color: randomContrastingColor(_rng, background: background),
+          fontFamily: isSeparator ? null : old.fontFamily,
         );
       },
       growable: false,
