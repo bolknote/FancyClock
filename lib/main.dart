@@ -47,7 +47,9 @@ Future<List<FontEntry>> parseManifestAsset() async {
   }
   final result = <FontEntry>[];
   final usedFamilies = <String>{};
-  final bannedStemPattern = RegExp(r'(_Guides$|Guides$)', caseSensitive: false);
+  // Guides: helper strokes. Barcode: Libre Barcode* encodes glyphs as bars (digits look wrong).
+  final bannedStemPattern =
+      RegExp(r'(_Guides$|Guides$|Barcode)', caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {
       final f = item['file'];
@@ -504,7 +506,6 @@ class _FancyClockScreenState extends State<FancyClockScreen>
         return DigitStyle(
           character: ch,
           color: randomContrastingColor(_rng, background: _background),
-          // Keep ':' readable and stable; randomize only digits.
           fontFamily: isSeparator
               ? null
               : (families.isNotEmpty
