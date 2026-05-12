@@ -2,23 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
-import 'package:camera/camera.dart';
 import 'package:fancy_clock/clock_font_metrics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 const Color clockBackground = Color.fromRGBO(32, 32, 32, 1.0);
 const Color milkBackground = Color.fromRGBO(244, 240, 232, 1.0);
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  List<CameraDescription> cameras = const [];
-  try {
-    cameras = await availableCameras();
-  } catch (err) {
-    debugPrint('Camera discovery failed: $err');
-  }
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -29,7 +21,7 @@ Future<void> main() async {
       statusBarBrightness: Brightness.dark,
     ),
   );
-  runApp(FancyClockApp(cameras: cameras));
+  runApp(const FancyClockApp());
 }
 
 class FontEntry {
@@ -77,13 +69,10 @@ Future<FontEntry?> tryRegisterFontEntry(FontEntry e) async {
     loader.addFont(rootBundle.load('assets/fonts/${e.file}'));
     await loader.load();
     if (!clockFontDigitsLookSane(e.fontFamily)) {
-      debugPrint('Font rejected (digit metrics): ${e.file}');
       return null;
     }
     return e;
-  } catch (err, st) {
-    debugPrint('Font load failed (${e.fontFamily}): $err');
-    debugPrint('$st');
+  } catch (_) {
     return null;
   }
 }
@@ -154,12 +143,7 @@ class DigitStyle {
 }
 
 class FancyClockApp extends StatelessWidget {
-  const FancyClockApp({
-    required this.cameras,
-    super.key,
-  });
-
-  final List<CameraDescription> cameras;
+  const FancyClockApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -169,18 +153,13 @@ class FancyClockApp extends StatelessWidget {
         scaffoldBackgroundColor: clockBackground,
         useMaterial3: true,
       ),
-      home: FancyClockBootstrapper(cameras: cameras),
+      home: const FancyClockBootstrapper(),
     );
   }
 }
 
 class FancyClockBootstrapper extends StatefulWidget {
-  const FancyClockBootstrapper({
-    required this.cameras,
-    super.key,
-  });
-
-  final List<CameraDescription> cameras;
+  const FancyClockBootstrapper({super.key});
 
   @override
   State<FancyClockBootstrapper> createState() => _FancyClockBootstrapperState();
@@ -198,7 +177,7 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
   Future<_BootData> _bootSequence() async {
     final declared = await parseManifestAsset();
     final loaded = await loadFontsFromManifest(declared);
-    return _BootData(loadedFonts: loaded, cameras: widget.cameras);
+    return _BootData(loadedFonts: loaded);
   }
 
   @override
@@ -230,7 +209,6 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
         }
         return FancyClockScreen(
           fonts: snapshot.data!.loadedFonts,
-          cameras: snapshot.data!.cameras,
         );
       },
     );
@@ -240,22 +218,18 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
 class _BootData {
   _BootData({
     required this.loadedFonts,
-    required this.cameras,
   });
 
   final List<FontEntry> loadedFonts;
-  final List<CameraDescription> cameras;
 }
 
 class FancyClockScreen extends StatefulWidget {
   const FancyClockScreen({
     required this.fonts,
-    required this.cameras,
     super.key,
   });
 
   final List<FontEntry> fonts;
-  final List<CameraDescription> cameras;
 
   @override
   State<FancyClockScreen> createState() => _FancyClockScreenState();
@@ -266,10 +240,9 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   final math.Random _rng = math.Random.secure();
 
   Timer? _timer;
-  Timer? _cameraRestartTimer;
-  CameraController? _cameraController;
-  /// False while tearing down or before stream starts — image callback must bail early.
-  bool _ambientStreamActive = false;
+  /// One-shot wait until the next minute boundary before starting the 1 Hz ticker.
+  Timer? _minuteAlignTimer;
+  StreamSubscription<double>? _ambientLightSub;
   DateTime _lastLightSample = DateTime.fromMillisecondsSinceEpoch(0);
   Color _background = clockBackground;
   bool _brightMode = false;
@@ -289,170 +262,92 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     WidgetsBinding.instance.addObserver(this);
     _lastShown = DateTime.now().toLocalFormatted();
     slots = _buildSlots(_lastShown);
-    unawaited(_initAmbientLightCamera());
+    _startAmbientLightSensor();
     _scheduleAlignedTicker();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _cameraRestartTimer?.cancel();
+    unawaited(_ambientLightSub?.cancel());
+    _minuteAlignTimer?.cancel();
     _timer?.cancel();
-    final cam = _cameraController;
-    unawaited(_tearDownCamera(cam));
     super.dispose();
-  }
-
-  Future<void> _tearDownCamera(CameraController? cam) async {
-    _ambientStreamActive = false;
-    _cameraController = null;
-    if (cam == null) {
-      return;
-    }
-    try {
-      if (cam.value.isInitialized && cam.value.isStreamingImages) {
-        await cam.stopImageStream();
-      }
-    } catch (err) {
-      debugPrint('Ambient camera stopImageStream: $err');
-    }
-    try {
-      await cam.dispose();
-    } catch (err) {
-      debugPrint('Ambient camera dispose: $err');
-    }
-  }
-
-  void _scheduleAmbientCameraRestart() {
-    _cameraRestartTimer?.cancel();
-    _cameraRestartTimer = Timer.periodic(const Duration(hours: 6), (_) {
-      if (mounted) {
-        unawaited(_restartAmbientCameraForStability());
-      }
-    });
-  }
-
-  Future<void> _restartAmbientCameraForStability() async {
-    final cam = _cameraController;
-    if (cam == null || !mounted) {
-      return;
-    }
-    debugPrint('Ambient camera periodic restart');
-    await _tearDownCamera(cam);
-    if (!mounted) {
-      return;
-    }
-    await _initAmbientLightCamera();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _tick(force: true);
-      if (_cameraController == null) {
-        unawaited(_initAmbientLightCamera());
-      }
+      _startAmbientLightSensor();
     } else if (state == AppLifecycleState.paused) {
-      _cameraRestartTimer?.cancel();
-      final cam = _cameraController;
-      unawaited(_tearDownCamera(cam));
+      unawaited(_ambientLightSub?.cancel());
+      _ambientLightSub = null;
     }
   }
 
-  Future<void> _initAmbientLightCamera() async {
-    if (widget.cameras.isEmpty) {
-      debugPrint('Ambient light: no cameras available');
+  void _startAmbientLightSensor() {
+    if (_ambientLightSub != null) {
       return;
     }
-    if (_cameraController != null) {
-      return;
-    }
-    final perm = await Permission.camera.request();
-    if (!perm.isGranted) {
-      debugPrint('Camera permission denied: $perm');
-      return;
-    }
+    _ambientLightSub = const EventChannel('fancy_clock/ambient_lux')
+        .receiveBroadcastStream()
+        .where((event) => event is num)
+        .map((event) => (event as num).toDouble())
+        .listen(
+      _onAmbientLuma,
+      onError: (_) {
+        unawaited(_ambientLightSub?.cancel());
+        _ambientLightSub = null;
+        _useNoAmbientSensorFallback();
+      },
+      cancelOnError: false,
+    );
+  }
+
+  void _onAmbientLuma(double luma) {
     if (!mounted) {
       return;
     }
-    final selected = widget.cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => widget.cameras.first,
-    );
-    final controller = CameraController(
-      selected,
-      ResolutionPreset.low,
-      enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.nv21,
-    );
-    try {
-      await controller.initialize();
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
-      _cameraController = controller;
-      _ambientStreamActive = true;
-      await controller.startImageStream((image) {
-        if (!_ambientStreamActive || !mounted) {
-          return;
-        }
-        final now = DateTime.now();
-        if (now.difference(_lastLightSample) <
-            const Duration(milliseconds: 300)) {
-          return;
-        }
-        _lastLightSample = now;
-        final ambientRaw = _estimateAmbientLuma(image);
-        _ambientFast = _ambientFast * 0.72 + ambientRaw * 0.28;
-        _ambientSlow = _ambientSlow * 0.994 + _ambientFast * 0.006;
-        final updated = _ambientMatchedBackground(_ambientFast);
-        if ((updated.r - _background.r).abs() > 0.008 ||
-            (updated.g - _background.g).abs() > 0.008 ||
-            (updated.b - _background.b).abs() > 0.008) {
-          if (!mounted || !_ambientStreamActive) {
-            return;
-          }
-          setState(() {
-            _background = updated;
-            // Only refresh contrast — reshuffling fonts every frame hammers the UI
-            // and allocates; keep fonts until the minute tick.
-            slots = _recolorSlots(_lastShown, updated);
-          });
-        }
-      });
-      if (mounted) {
-        _scheduleAmbientCameraRestart();
-      }
-    } catch (err) {
-      debugPrint('Ambient light camera init failed: $err');
-      _ambientStreamActive = false;
-      _cameraController = null;
-      try {
-        await controller.dispose();
-      } catch (_) {}
+    final now = DateTime.now();
+    if (now.difference(_lastLightSample) < const Duration(milliseconds: 300)) {
+      return;
     }
+    _lastLightSample = now;
+    _applyAmbientLuma(luma.clamp(0.0, 1.0).toDouble());
   }
 
-  double _estimateAmbientLuma(CameraImage image) {
-    if (image.planes.isEmpty) {
-      return 0.5;
+  void _useNoAmbientSensorFallback() {
+    if (!mounted || _background == milkBackground) {
+      return;
     }
-    final bytes = image.planes.first.bytes;
-    if (bytes.isEmpty) {
-      return 0.5;
+    _brightMode = true;
+    _switchEvidence = 0;
+    _ambientFast = 1.0;
+    _ambientSlow = 1.0;
+    setState(() {
+      _background = milkBackground;
+      slots = _recolorSlots(_lastShown, milkBackground);
+    });
+  }
+
+  void _applyAmbientLuma(double ambientRaw) {
+    _ambientFast = _ambientFast * 0.72 + ambientRaw * 0.28;
+    _ambientSlow = _ambientSlow * 0.994 + _ambientFast * 0.006;
+    final updated = _ambientMatchedBackground(_ambientFast);
+    if ((updated.r - _background.r).abs() > 0.008 ||
+        (updated.g - _background.g).abs() > 0.008 ||
+        (updated.b - _background.b).abs() > 0.008) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _background = updated;
+        // Only refresh contrast — reshuffling fonts every frame hammers the UI
+        // and allocates; keep fonts until the minute tick.
+        slots = _recolorSlots(_lastShown, updated);
+      });
     }
-    var sum = 0;
-    var count = 0;
-    final step = math.max(1, bytes.length ~/ 4096);
-    for (var i = 0; i < bytes.length; i += step) {
-      sum += bytes[i];
-      count++;
-    }
-    if (count == 0) {
-      return 0.5;
-    }
-    return (sum / count) / 255.0;
   }
 
   Color _ambientMatchedBackground(double ambientLuma) {
@@ -559,14 +454,17 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   }
 
   void _scheduleAlignedTicker() {
+    _minuteAlignTimer?.cancel();
     final now = DateTime.now();
     final delay = const Duration(minutes: 1) -
         Duration(seconds: now.second, microseconds: now.microsecond);
-    Future.delayed(delay, () {
+    _minuteAlignTimer = Timer(delay, () {
+      _minuteAlignTimer = null;
       if (!mounted) {
         return;
       }
       _tick(force: true);
+      _timer?.cancel();
       _timer = Timer.periodic(const Duration(seconds: 1), (_) {
         if (!mounted) {
           return;

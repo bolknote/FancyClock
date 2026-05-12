@@ -1,0 +1,33 @@
+name: Flutter test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: flutter-test-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - run: flutter analyze
+
+      - name: Unit + widget tests (leak-tracked widget suite)
+        env:
+          LEAK_TRACKING: "true"
+        run: flutter test
