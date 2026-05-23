@@ -29,7 +29,7 @@ Font subset binaries under `assets/fonts/` are not committed (they are large). A
 
 ### Generate font subsets
 
-Uses the first *N* alphabetically sorted families from Google Fonts metadata, subsets to `U+0030–U+0039`, writes files under `assets/fonts/` and refreshes `assets/fonts_manifest.json`.
+Walks alphabetically sorted families from Google Fonts metadata until *N* usable digit-font subsets are written. Fonts known to render helpers, bars, or other non-digit shapes are skipped. Each accepted font is subset to `U+0030–U+0039`, written under `assets/fonts/`, and listed in `assets/fonts_manifest.json`.
 
 ```bash
 python3 -m venv scripts/.venv

@@ -96,6 +96,10 @@
     "fontFamily": "Akshar Light"
   },
   {
+    "file": "Akt.ttf",
+    "fontFamily": "Akt"
+  },
+  {
     "file": "Aladin.ttf",
     "fontFamily": "Aladin"
   },
@@ -1752,10 +1756,6 @@
     "fontFamily": "Edu AU VIC WA NT Dots"
   },
   {
-    "file": "Edu_AU_VIC_WA_NT_Guides.ttf",
-    "fontFamily": "Edu AU VIC WA NT Guides"
-  },
-  {
     "file": "Edu_AU_VIC_WA_NT_Hand.ttf",
     "fontFamily": "Edu AU VIC WA NT Hand"
   },
@@ -1896,6 +1896,10 @@
     "fontFamily": "Esteban"
   },
   {
+    "file": "Estedad.ttf",
+    "fontFamily": "Estedad"
+  },
+  {
     "file": "Estonia.ttf",
     "fontFamily": "Estonia"
   },
@@ -2004,8 +2008,12 @@
     "fontFamily": "Finger Paint"
   },
   {
-    "file": "Finlandica.ttf",
-    "fontFamily": "Finlandica"
+    "file": "Finlandica_Headline.ttf",
+    "fontFamily": "Finlandica Headline Thin"
+  },
+  {
+    "file": "Finlandica_Text.ttf",
+    "fontFamily": "Finlandica Text Medium"
   },
   {
     "file": "Fira_Code.ttf",
@@ -2046,18 +2054,6 @@
   {
     "file": "Fleur_De_Leah.ttf",
     "fontFamily": "Fleur De Leah"
-  },
-  {
-    "file": "Flow_Block.ttf",
-    "fontFamily": "Flow Block"
-  },
-  {
-    "file": "Flow_Circular.ttf",
-    "fontFamily": "Flow Circular"
-  },
-  {
-    "file": "Flow_Rounded.ttf",
-    "fontFamily": "Flow Rounded"
   },
   {
     "file": "Foldit.ttf",
@@ -3344,34 +3340,6 @@
     "fontFamily": "Libertinus Serif Display"
   },
   {
-    "file": "Libre_Barcode_128.ttf",
-    "fontFamily": "Libre Barcode 128"
-  },
-  {
-    "file": "Libre_Barcode_128_Text.ttf",
-    "fontFamily": "Libre Barcode 128 Text"
-  },
-  {
-    "file": "Libre_Barcode_39.ttf",
-    "fontFamily": "Libre Barcode 39"
-  },
-  {
-    "file": "Libre_Barcode_39_Extended.ttf",
-    "fontFamily": "Libre Barcode 39 Extended"
-  },
-  {
-    "file": "Libre_Barcode_39_Extended_Text.ttf",
-    "fontFamily": "Libre Barcode 39 Extended Text"
-  },
-  {
-    "file": "Libre_Barcode_39_Text.ttf",
-    "fontFamily": "Libre Barcode 39 Text"
-  },
-  {
-    "file": "Libre_Barcode_EAN13_Text.ttf",
-    "fontFamily": "Libre Barcode EAN13 Text"
-  },
-  {
     "file": "Libre_Baskerville.ttf",
     "fontFamily": "Libre Baskerville"
   },
@@ -3546,6 +3514,10 @@
   {
     "file": "M_PLUS_Rounded_1c.ttf",
     "fontFamily": "Rounded Mplus 1c"
+  },
+  {
+    "file": "M_PLUS_U.ttf",
+    "fontFamily": "M PLUS U Thin"
   },
   {
     "file": "Ma_Shan_Zheng.ttf",
@@ -5368,168 +5340,84 @@
     "fontFamily": "Playwrite AR"
   },
   {
-    "file": "Playwrite_AR_Guides.ttf",
-    "fontFamily": "Playwrite AR Guides"
-  },
-  {
     "file": "Playwrite_AT.ttf",
     "fontFamily": "Playwrite AT"
-  },
-  {
-    "file": "Playwrite_AT_Guides.ttf",
-    "fontFamily": "Playwrite AT Guides"
   },
   {
     "file": "Playwrite_AU_NSW.ttf",
     "fontFamily": "Playwrite AU NSW"
   },
   {
-    "file": "Playwrite_AU_NSW_Guides.ttf",
-    "fontFamily": "Playwrite AU NSW Guides"
-  },
-  {
     "file": "Playwrite_AU_QLD.ttf",
     "fontFamily": "Playwrite AU QLD"
-  },
-  {
-    "file": "Playwrite_AU_QLD_Guides.ttf",
-    "fontFamily": "Playwrite AU QLD Guides"
   },
   {
     "file": "Playwrite_AU_SA.ttf",
     "fontFamily": "Playwrite AU SA"
   },
   {
-    "file": "Playwrite_AU_SA_Guides.ttf",
-    "fontFamily": "Playwrite AU SA Guides"
-  },
-  {
     "file": "Playwrite_AU_TAS.ttf",
     "fontFamily": "Playwrite AU TAS"
-  },
-  {
-    "file": "Playwrite_AU_TAS_Guides.ttf",
-    "fontFamily": "Playwrite AU TAS Guides"
   },
   {
     "file": "Playwrite_AU_VIC.ttf",
     "fontFamily": "Playwrite AU VIC"
   },
   {
-    "file": "Playwrite_AU_VIC_Guides.ttf",
-    "fontFamily": "Playwrite AU VIC Guides"
-  },
-  {
     "file": "Playwrite_BE_VLG.ttf",
     "fontFamily": "Playwrite BE VLG"
-  },
-  {
-    "file": "Playwrite_BE_VLG_Guides.ttf",
-    "fontFamily": "Playwrite BE VLG Guides"
   },
   {
     "file": "Playwrite_BE_WAL.ttf",
     "fontFamily": "Playwrite BE WAL"
   },
   {
-    "file": "Playwrite_BE_WAL_Guides.ttf",
-    "fontFamily": "Playwrite BE WAL Guides"
-  },
-  {
     "file": "Playwrite_BR.ttf",
     "fontFamily": "Playwrite BR"
-  },
-  {
-    "file": "Playwrite_BR_Guides.ttf",
-    "fontFamily": "Playwrite BR Guides"
   },
   {
     "file": "Playwrite_CA.ttf",
     "fontFamily": "Playwrite CA"
   },
   {
-    "file": "Playwrite_CA_Guides.ttf",
-    "fontFamily": "Playwrite CA Guides"
-  },
-  {
     "file": "Playwrite_CL.ttf",
     "fontFamily": "Playwrite CL"
-  },
-  {
-    "file": "Playwrite_CL_Guides.ttf",
-    "fontFamily": "Playwrite CL Guides"
   },
   {
     "file": "Playwrite_CO.ttf",
     "fontFamily": "Playwrite CO"
   },
   {
-    "file": "Playwrite_CO_Guides.ttf",
-    "fontFamily": "Playwrite CO Guides"
-  },
-  {
     "file": "Playwrite_CU.ttf",
     "fontFamily": "Playwrite CU"
-  },
-  {
-    "file": "Playwrite_CU_Guides.ttf",
-    "fontFamily": "Playwrite CU Guides"
   },
   {
     "file": "Playwrite_CZ.ttf",
     "fontFamily": "Playwrite CZ"
   },
   {
-    "file": "Playwrite_CZ_Guides.ttf",
-    "fontFamily": "Playwrite CZ Guides"
-  },
-  {
     "file": "Playwrite_DE_Grund.ttf",
     "fontFamily": "Playwrite DE Grund"
-  },
-  {
-    "file": "Playwrite_DE_Grund_Guides.ttf",
-    "fontFamily": "Playwrite DE Grund Guides"
   },
   {
     "file": "Playwrite_DE_LA.ttf",
     "fontFamily": "Playwrite DE LA"
   },
   {
-    "file": "Playwrite_DE_LA_Guides.ttf",
-    "fontFamily": "Playwrite DE LA Guides"
-  },
-  {
     "file": "Playwrite_DE_SAS.ttf",
     "fontFamily": "Playwrite DE SAS"
-  },
-  {
-    "file": "Playwrite_DE_SAS_Guides.ttf",
-    "fontFamily": "Playwrite DE SAS Guides"
   },
   {
     "file": "Playwrite_DE_VA.ttf",
     "fontFamily": "Playwrite DE VA"
   },
   {
-    "file": "Playwrite_DE_VA_Guides.ttf",
-    "fontFamily": "Playwrite DE VA Guides"
-  },
-  {
     "file": "Playwrite_DK_Loopet.ttf",
     "fontFamily": "Playwrite DK Loopet"
   },
   {
-    "file": "Playwrite_DK_Loopet_Guides.ttf",
-    "fontFamily": "Playwrite DK Loopet Guides"
-  },
-  {
     "file": "Playwrite_DK_Uloopet.ttf",
     "fontFamily": "Playwrite DK Uloopet"
-  },
-  {
-    "file": "Playwrite_DK_Uloopet_Guides.ttf",
-    "fontFamily": "Playwrite DK Uloopet Guides"
   },
   {
     "file": "Playwrite_ES.ttf",
@@ -5540,148 +5428,72 @@
     "fontFamily": "Playwrite ES Deco"
   },
   {
-    "file": "Playwrite_ES_Deco_Guides.ttf",
-    "fontFamily": "Playwrite ES Deco Guides"
-  },
-  {
-    "file": "Playwrite_ES_Guides.ttf",
-    "fontFamily": "Playwrite ES Guides"
-  },
-  {
     "file": "Playwrite_FR_Moderne.ttf",
     "fontFamily": "Playwrite FR Moderne"
-  },
-  {
-    "file": "Playwrite_FR_Moderne_Guides.ttf",
-    "fontFamily": "Playwrite FR Moderne Guides"
   },
   {
     "file": "Playwrite_FR_Trad.ttf",
     "fontFamily": "Playwrite FR Trad"
   },
   {
-    "file": "Playwrite_FR_Trad_Guides.ttf",
-    "fontFamily": "Playwrite FR Trad Guides"
-  },
-  {
     "file": "Playwrite_GB_J.ttf",
     "fontFamily": "Playwrite GB J"
-  },
-  {
-    "file": "Playwrite_GB_J_Guides.ttf",
-    "fontFamily": "Playwrite GB J Guides"
   },
   {
     "file": "Playwrite_GB_S.ttf",
     "fontFamily": "Playwrite GB S"
   },
   {
-    "file": "Playwrite_GB_S_Guides.ttf",
-    "fontFamily": "Playwrite GB S Guides"
-  },
-  {
     "file": "Playwrite_HR.ttf",
     "fontFamily": "Playwrite HR"
-  },
-  {
-    "file": "Playwrite_HR_Guides.ttf",
-    "fontFamily": "Playwrite HR Guides"
   },
   {
     "file": "Playwrite_HR_Lijeva.ttf",
     "fontFamily": "Playwrite HR Lijeva"
   },
   {
-    "file": "Playwrite_HR_Lijeva_Guides.ttf",
-    "fontFamily": "Playwrite HR Lijeva Guides"
-  },
-  {
     "file": "Playwrite_HU.ttf",
     "fontFamily": "Playwrite HU"
-  },
-  {
-    "file": "Playwrite_HU_Guides.ttf",
-    "fontFamily": "Playwrite HU Guides"
   },
   {
     "file": "Playwrite_ID.ttf",
     "fontFamily": "Playwrite ID"
   },
   {
-    "file": "Playwrite_ID_Guides.ttf",
-    "fontFamily": "Playwrite ID Guides"
-  },
-  {
     "file": "Playwrite_IE.ttf",
     "fontFamily": "Playwrite IE"
-  },
-  {
-    "file": "Playwrite_IE_Guides.ttf",
-    "fontFamily": "Playwrite IE Guides"
   },
   {
     "file": "Playwrite_IN.ttf",
     "fontFamily": "Playwrite IN"
   },
   {
-    "file": "Playwrite_IN_Guides.ttf",
-    "fontFamily": "Playwrite IN Guides"
-  },
-  {
     "file": "Playwrite_IS.ttf",
     "fontFamily": "Playwrite IS"
-  },
-  {
-    "file": "Playwrite_IS_Guides.ttf",
-    "fontFamily": "Playwrite IS Guides"
   },
   {
     "file": "Playwrite_IT_Moderna.ttf",
     "fontFamily": "Playwrite IT Moderna"
   },
   {
-    "file": "Playwrite_IT_Moderna_Guides.ttf",
-    "fontFamily": "Playwrite IT Moderna Guides"
-  },
-  {
     "file": "Playwrite_IT_Trad.ttf",
     "fontFamily": "Playwrite IT Trad"
-  },
-  {
-    "file": "Playwrite_IT_Trad_Guides.ttf",
-    "fontFamily": "Playwrite IT Trad Guides"
   },
   {
     "file": "Playwrite_MX.ttf",
     "fontFamily": "Playwrite MX"
   },
   {
-    "file": "Playwrite_MX_Guides.ttf",
-    "fontFamily": "Playwrite MX Guides"
-  },
-  {
     "file": "Playwrite_NG_Modern.ttf",
     "fontFamily": "Playwrite NG Modern"
-  },
-  {
-    "file": "Playwrite_NG_Modern_Guides.ttf",
-    "fontFamily": "Playwrite NG Modern Guides"
   },
   {
     "file": "Playwrite_NL.ttf",
     "fontFamily": "Playwrite NL"
   },
   {
-    "file": "Playwrite_NL_Guides.ttf",
-    "fontFamily": "Playwrite NL Guides"
-  },
-  {
     "file": "Playwrite_NO.ttf",
     "fontFamily": "Playwrite NO"
-  },
-  {
-    "file": "Playwrite_NO_Guides.ttf",
-    "fontFamily": "Playwrite NO Guides"
   },
   {
     "file": "Playwrite_NZ.ttf",
@@ -5692,92 +5504,44 @@
     "fontFamily": "Playwrite NZ Basic"
   },
   {
-    "file": "Playwrite_NZ_Basic_Guides.ttf",
-    "fontFamily": "Playwrite NZ Basic Guides"
-  },
-  {
-    "file": "Playwrite_NZ_Guides.ttf",
-    "fontFamily": "Playwrite NZ Guides"
-  },
-  {
     "file": "Playwrite_PE.ttf",
     "fontFamily": "Playwrite PE"
-  },
-  {
-    "file": "Playwrite_PE_Guides.ttf",
-    "fontFamily": "Playwrite PE Guides"
   },
   {
     "file": "Playwrite_PL.ttf",
     "fontFamily": "Playwrite PL"
   },
   {
-    "file": "Playwrite_PL_Guides.ttf",
-    "fontFamily": "Playwrite PL Guides"
-  },
-  {
     "file": "Playwrite_PT.ttf",
     "fontFamily": "Playwrite PT"
-  },
-  {
-    "file": "Playwrite_PT_Guides.ttf",
-    "fontFamily": "Playwrite PT Guides"
   },
   {
     "file": "Playwrite_RO.ttf",
     "fontFamily": "Playwrite RO"
   },
   {
-    "file": "Playwrite_RO_Guides.ttf",
-    "fontFamily": "Playwrite RO Guides"
-  },
-  {
     "file": "Playwrite_SK.ttf",
     "fontFamily": "Playwrite SK"
-  },
-  {
-    "file": "Playwrite_SK_Guides.ttf",
-    "fontFamily": "Playwrite SK Guides"
   },
   {
     "file": "Playwrite_TZ.ttf",
     "fontFamily": "Playwrite TZ"
   },
   {
-    "file": "Playwrite_TZ_Guides.ttf",
-    "fontFamily": "Playwrite TZ Guides"
-  },
-  {
     "file": "Playwrite_US_Modern.ttf",
     "fontFamily": "Playwrite US Modern"
-  },
-  {
-    "file": "Playwrite_US_Modern_Guides.ttf",
-    "fontFamily": "Playwrite US Modern Guides"
   },
   {
     "file": "Playwrite_US_Trad.ttf",
     "fontFamily": "Playwrite US Trad"
   },
   {
-    "file": "Playwrite_US_Trad_Guides.ttf",
-    "fontFamily": "Playwrite US Trad Guides"
-  },
-  {
     "file": "Playwrite_VN.ttf",
     "fontFamily": "Playwrite VN"
   },
   {
-    "file": "Playwrite_VN_Guides.ttf",
-    "fontFamily": "Playwrite VN Guides"
-  },
-  {
     "file": "Playwrite_ZA.ttf",
     "fontFamily": "Playwrite ZA"
-  },
-  {
-    "file": "Playwrite_ZA_Guides.ttf",
-    "fontFamily": "Playwrite ZA Guides"
   },
   {
     "file": "Plus_Jakarta_Sans.ttf",
@@ -5958,5 +5722,281 @@
   {
     "file": "Qwigley.ttf",
     "fontFamily": "Qwigley"
+  },
+  {
+    "file": "Qwitcher_Grypen.ttf",
+    "fontFamily": "Qwitcher Grypen"
+  },
+  {
+    "file": "REM.ttf",
+    "fontFamily": "REM Medium"
+  },
+  {
+    "file": "Racing_Sans_One.ttf",
+    "fontFamily": "Racing Sans One"
+  },
+  {
+    "file": "Radio_Canada.ttf",
+    "fontFamily": "Radio Canada"
+  },
+  {
+    "file": "Radio_Canada_Big.ttf",
+    "fontFamily": "Radio Canada Big"
+  },
+  {
+    "file": "Radley.ttf",
+    "fontFamily": "Radley"
+  },
+  {
+    "file": "Rajdhani.ttf",
+    "fontFamily": "Rajdhani"
+  },
+  {
+    "file": "Rakkas.ttf",
+    "fontFamily": "Rakkas"
+  },
+  {
+    "file": "Raleway.ttf",
+    "fontFamily": "Raleway Thin"
+  },
+  {
+    "file": "Raleway_Dots.ttf",
+    "fontFamily": "Raleway Dots"
+  },
+  {
+    "file": "Ramabhadra.ttf",
+    "fontFamily": "Ramabhadra"
+  },
+  {
+    "file": "Ramaraja.ttf",
+    "fontFamily": "Ramaraja"
+  },
+  {
+    "file": "Rambla.ttf",
+    "fontFamily": "Rambla"
+  },
+  {
+    "file": "Rammetto_One.ttf",
+    "fontFamily": "Rammetto One"
+  },
+  {
+    "file": "Rampart_One.ttf",
+    "fontFamily": "Rampart One"
+  },
+  {
+    "file": "Ramsina.ttf",
+    "fontFamily": "Ramsina"
+  },
+  {
+    "file": "Ranchers.ttf",
+    "fontFamily": "Ranchers"
+  },
+  {
+    "file": "Rancho.ttf",
+    "fontFamily": "Rancho"
+  },
+  {
+    "file": "Ranga.ttf",
+    "fontFamily": "Ranga"
+  },
+  {
+    "file": "Rasa.ttf",
+    "fontFamily": "Rasa"
+  },
+  {
+    "file": "Rationale.ttf",
+    "fontFamily": "Rationale"
+  },
+  {
+    "file": "Ravi_Prakash.ttf",
+    "fontFamily": "Ravi Prakash"
+  },
+  {
+    "file": "Readex_Pro.ttf",
+    "fontFamily": "Readex Pro"
+  },
+  {
+    "file": "Recursive.ttf",
+    "fontFamily": "Recursive Sans Linear Light"
+  },
+  {
+    "file": "Red_Hat_Display.ttf",
+    "fontFamily": "Red Hat Display"
+  },
+  {
+    "file": "Red_Hat_Mono.ttf",
+    "fontFamily": "Red Hat Mono"
+  },
+  {
+    "file": "Red_Hat_Text.ttf",
+    "fontFamily": "Red Hat Text"
+  },
+  {
+    "file": "Red_Rose.ttf",
+    "fontFamily": "Red Rose"
+  },
+  {
+    "file": "Redacted.ttf",
+    "fontFamily": "Redacted"
+  },
+  {
+    "file": "Redacted_Script.ttf",
+    "fontFamily": "Redacted Script"
+  },
+  {
+    "file": "Reddit_Mono.ttf",
+    "fontFamily": "Reddit Mono"
+  },
+  {
+    "file": "Reddit_Sans.ttf",
+    "fontFamily": "Reddit Sans"
+  },
+  {
+    "file": "Reddit_Sans_Condensed.ttf",
+    "fontFamily": "Reddit Sans Condensed"
+  },
+  {
+    "file": "Redressed.ttf",
+    "fontFamily": "Redressed"
+  },
+  {
+    "file": "Reem_Kufi.ttf",
+    "fontFamily": "Reem Kufi"
+  },
+  {
+    "file": "Reem_Kufi_Fun.ttf",
+    "fontFamily": "Reem Kufi Fun"
+  },
+  {
+    "file": "Reenie_Beanie.ttf",
+    "fontFamily": "Reenie Beanie"
+  },
+  {
+    "file": "Reggae_One.ttf",
+    "fontFamily": "Reggae One"
+  },
+  {
+    "file": "Rethink_Sans.ttf",
+    "fontFamily": "Rethink Sans"
+  },
+  {
+    "file": "Revalia.ttf",
+    "fontFamily": "Revalia"
+  },
+  {
+    "file": "Rhodium_Libre.ttf",
+    "fontFamily": "Rhodium Libre"
+  },
+  {
+    "file": "Ribeye.ttf",
+    "fontFamily": "Ribeye"
+  },
+  {
+    "file": "Ribeye_Marrow.ttf",
+    "fontFamily": "Ribeye Marrow"
+  },
+  {
+    "file": "Righteous.ttf",
+    "fontFamily": "Righteous"
+  },
+  {
+    "file": "Risque.ttf",
+    "fontFamily": "Risque"
+  },
+  {
+    "file": "Road_Rage.ttf",
+    "fontFamily": "Road Rage"
+  },
+  {
+    "file": "Roboto.ttf",
+    "fontFamily": "Roboto"
+  },
+  {
+    "file": "Roboto_Condensed.ttf",
+    "fontFamily": "Roboto Condensed"
+  },
+  {
+    "file": "Roboto_Flex.ttf",
+    "fontFamily": "Roboto Flex"
+  },
+  {
+    "file": "Roboto_Mono.ttf",
+    "fontFamily": "Roboto Mono"
+  },
+  {
+    "file": "Roboto_Serif.ttf",
+    "fontFamily": "Roboto Serif 20pt"
+  },
+  {
+    "file": "Roboto_Slab.ttf",
+    "fontFamily": "Roboto Slab"
+  },
+  {
+    "file": "Rochester.ttf",
+    "fontFamily": "Rochester"
+  },
+  {
+    "file": "Rock_3D.ttf",
+    "fontFamily": "Rock 3D"
+  },
+  {
+    "file": "Rock_Salt.ttf",
+    "fontFamily": "Rock Salt"
+  },
+  {
+    "file": "RocknRoll_One.ttf",
+    "fontFamily": "RocknRoll One"
+  },
+  {
+    "file": "Rokkitt.ttf",
+    "fontFamily": "Rokkitt SemiBold"
+  },
+  {
+    "file": "Romanesco.ttf",
+    "fontFamily": "Romanesco"
+  },
+  {
+    "file": "Ropa_Sans.ttf",
+    "fontFamily": "Ropa Sans"
+  },
+  {
+    "file": "Rosario.ttf",
+    "fontFamily": "Rosario"
+  },
+  {
+    "file": "Rosarivo.ttf",
+    "fontFamily": "Rosarivo"
+  },
+  {
+    "file": "Rouge_Script.ttf",
+    "fontFamily": "Rouge Script"
+  },
+  {
+    "file": "Rowdies.ttf",
+    "fontFamily": "Rowdies"
+  },
+  {
+    "file": "Rozha_One.ttf",
+    "fontFamily": "Rozha One"
+  },
+  {
+    "file": "Rubik.ttf",
+    "fontFamily": "Rubik Light"
+  },
+  {
+    "file": "Rubik_80s_Fade.ttf",
+    "fontFamily": "Rubik 80s Fade"
+  },
+  {
+    "file": "Rubik_Beastly.ttf",
+    "fontFamily": "Rubik Beastly"
+  },
+  {
+    "file": "Rubik_Broken_Fax.ttf",
+    "fontFamily": "Rubik Broken Fax"
+  },
+  {
+    "file": "Rubik_Bubbles.ttf",
+    "fontFamily": "Rubik Bubbles"
   }
 ]

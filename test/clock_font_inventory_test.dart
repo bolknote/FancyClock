@@ -18,7 +18,7 @@ List<({String file, String fontFamily})> _manifestEntriesFromJson(String raw) {
   final result = <({String file, String fontFamily})>[];
   final usedFamilies = <String>{};
   final bannedStemPattern =
-      RegExp(r'(_Guides$|Guides$|Barcode)', caseSensitive: false);
+      RegExp(r'(_Guides$|Guides$|^Flow_|^Flow$|Barcode)', caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {
       final f = item['file'];
@@ -74,7 +74,7 @@ void main() {
       }
 
       print(
-        'Font inventory: manifest(after Guides ban)=$manifestCount '
+        'Font inventory: manifest(after helper-font ban)=$manifestCount '
         'missing_file=$fileMissing load_failed=$loadFailed '
         'rejected_metrics=$rejectedMetrics passed=$passed',
       );

@@ -39,16 +39,17 @@ Future<List<FontEntry>> parseManifestAsset() async {
   }
   final result = <FontEntry>[];
   final usedFamilies = <String>{};
-  // Guides: helper strokes. Barcode: Libre Barcode* encodes glyphs as bars (digits look wrong).
+  // Guides: educational helper strokes. Flow/Barcode encode glyphs as bars
+  // instead of digits.
   final bannedStemPattern =
-      RegExp(r'(_Guides$|Guides$|Barcode)', caseSensitive: false);
+      RegExp(r'(_Guides$|Guides$|^Flow_|^Flow$|Barcode)', caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {
       final f = item['file'];
       if (f is String && f.isNotEmpty) {
         final stem = f.replaceFirst(RegExp(r'\.[^.]+$'), '');
         if (bannedStemPattern.hasMatch(stem)) {
-          // Exclude guide-lined educational fonts that render helper stripes.
+          // Exclude fonts that do not render plain readable digits.
           continue;
         }
         // Use deterministic ASCII-safe family ids per file to avoid collisions.
@@ -240,6 +241,7 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   final math.Random _rng = math.Random.secure();
 
   Timer? _timer;
+
   /// One-shot wait until the next minute boundary before starting the 1 Hz ticker.
   Timer? _minuteAlignTimer;
   StreamSubscription<double>? _ambientLightSub;

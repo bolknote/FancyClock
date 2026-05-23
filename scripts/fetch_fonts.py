@@ -26,6 +26,7 @@ META_USER_AGENT = (
 # Google's CSS endpoints return truetype URLs for legacy desktop / Windows NT user agents.
 CSS_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0"
 REQUIRED_CODEPOINTS = {0x30 + i for i in range(10)}
+BANNED_STEM_RE = re.compile(r"(_Guides$|Guides$|^Flow_|^Flow$|Barcode)", re.I)
 
 
 def strip_jsonp(payload: str) -> str:
@@ -58,6 +59,11 @@ def sanitize_filename_slug(family: str) -> str:
     ascii_slug = "".join(c if c.isalnum() or c in "-_" else "_" for c in norm.encode("ascii", "ignore").decode())
     ascii_slug = re.sub(r"_+", "_", ascii_slug).strip("_")
     return ascii_slug or "font"
+
+
+def is_banned_font_stem(stem: str) -> bool:
+    """Reject generated families that do not render plain readable digits."""
+    return bool(BANNED_STEM_RE.search(stem))
 
 
 def css_url_for_family(family: str) -> str:
@@ -202,16 +208,36 @@ def run(limit: int, out_dir: Path, manifest_out: Path, polite_delay_s: float) ->
     out_dir.mkdir(parents=True, exist_ok=True)
     manifest: list[dict[str, str]] = []
     failed = 0
+    skipped = 0
 
     md = fetch_metadata()
-    families = sorted_families(md)[:limit]
+    families = sorted_families(md)
 
-    logging.info("Processing %d families (limit=%d)", len(families), limit)
+    logging.info(
+        "Processing Google Fonts until %d usable digit fonts are written "
+        "(available families=%d)",
+        limit,
+        len(families),
+    )
 
     for i, family in enumerate(families, start=1):
+        if len(manifest) >= limit:
+            break
         slug = sanitize_filename_slug(family)
+        if is_banned_font_stem(slug):
+            skipped += 1
+            logging.info("[%d/%d] %s → %s skipped by stem ban", i, len(families), family, slug)
+            continue
         out_ttf = out_dir / f"{slug}.ttf"
-        logging.info("[%d/%d] %s → %s", i, len(families), family, out_ttf.name)
+        logging.info(
+            "[%d/%d] %s → %s (usable=%d/%d)",
+            i,
+            len(families),
+            family,
+            out_ttf.name,
+            len(manifest),
+            limit,
+        )
 
         css_url = css_url_for_family(family)
         css = fetch_css(css_url)
@@ -243,6 +269,16 @@ def run(limit: int, out_dir: Path, manifest_out: Path, polite_delay_s: float) ->
                 src.write_bytes(blob)
                 if subset_font_file(src, out_ttf) and verify_cmap(out_ttf):
                     fam_name = read_font_family_name(out_ttf) or family
+                    if is_banned_font_stem(out_ttf.stem):
+                        skipped += 1
+                        ok_any = True
+                        if out_ttf.exists():
+                            try:
+                                out_ttf.unlink()
+                            except OSError:
+                                pass
+                        logging.info("%s skipped by output stem ban", out_ttf.name)
+                        break
                     manifest.append({"file": out_ttf.name, "fontFamily": fam_name})
                     ok_any = True
                     break
@@ -259,7 +295,13 @@ def run(limit: int, out_dir: Path, manifest_out: Path, polite_delay_s: float) ->
     manifest_out.parent.mkdir(parents=True, exist_ok=True)
     manifest_out.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
-    logging.info("Done — %d subset fonts written, %d failed. Manifest → %s", len(manifest), failed, manifest_out)
+    logging.info(
+        "Done — %d subset fonts written, %d failed, %d skipped by ban. Manifest → %s",
+        len(manifest),
+        failed,
+        skipped,
+        manifest_out,
+    )
     return 0 if manifest else 1
 
 
@@ -271,7 +313,7 @@ def main() -> None:
         "--limit",
         type=int,
         default=1500,
-        help="Number of families to process after sorting alphabetically (default 1500).",
+        help="Target number of usable digit-font subsets to write (default 1500).",
     )
     parser.add_argument(
         "--out-dir",
