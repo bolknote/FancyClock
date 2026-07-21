@@ -17,8 +17,9 @@ List<({String file, String fontFamily})> _manifestEntriesFromJson(String raw) {
   }
   final result = <({String file, String fontFamily})>[];
   final usedFamilies = <String>{};
-  final bannedStemPattern =
-      RegExp(r'(_Guides$|Guides$|^Flow_|^Flow$|Barcode)', caseSensitive: false);
+  final bannedStemPattern = RegExp(
+      r'(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode)',
+      caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {
       final f = item['file'];

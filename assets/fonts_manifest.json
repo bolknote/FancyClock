@@ -648,10 +648,6 @@
     "fontFamily": "Baloo 2"
   },
   {
-    "file": "Baloo_Bhai_2.ttf",
-    "fontFamily": "Baloo Bhai 2"
-  },
-  {
     "file": "Baloo_Bhaijaan_2.ttf",
     "fontFamily": "Baloo Bhaijaan 2"
   },
@@ -3388,10 +3384,6 @@
     "fontFamily": "Linden Hill"
   },
   {
-    "file": "Linefont.ttf",
-    "fontFamily": "Linefont"
-  },
-  {
     "file": "Lisu_Bosa.ttf",
     "fontFamily": "Lisu Bosa"
   },
@@ -5998,5 +5990,13 @@
   {
     "file": "Rubik_Bubbles.ttf",
     "fontFamily": "Rubik Bubbles"
+  },
+  {
+    "file": "Alien_Block.ttf",
+    "fontFamily": "Alien Block"
+  },
+  {
+    "file": "Baloo_Bhai_2.ttf",
+    "fontFamily": "Baloo Bhai 2"
   }
 ]

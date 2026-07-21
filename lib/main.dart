@@ -39,10 +39,11 @@ Future<List<FontEntry>> parseManifestAsset() async {
   }
   final result = <FontEntry>[];
   final usedFamilies = <String>{};
-  // Guides: educational helper strokes. Flow/Barcode encode glyphs as bars
-  // instead of digits.
-  final bannedStemPattern =
-      RegExp(r'(_Guides$|Guides$|^Flow_|^Flow$|Barcode)', caseSensitive: false);
+  // Guides: educational helper strokes. Flow/Linefont/Barcode encode glyphs
+  // as bars or dots instead of digits.
+  final bannedStemPattern = RegExp(
+      r'(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode)',
+      caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {
       final f = item['file'];

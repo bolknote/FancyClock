@@ -26,7 +26,7 @@ META_USER_AGENT = (
 # Google's CSS endpoints return truetype URLs for legacy desktop / Windows NT user agents.
 CSS_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0"
 REQUIRED_CODEPOINTS = {0x30 + i for i in range(10)}
-BANNED_STEM_RE = re.compile(r"(_Guides$|Guides$|^Flow_|^Flow$|Barcode)", re.I)
+BANNED_STEM_RE = re.compile(r"(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode)", re.I)
 
 
 def strip_jsonp(payload: str) -> str:
@@ -81,6 +81,9 @@ def fetch_css(css_url: str) -> str | None:
         return None
     except urllib.error.URLError as e:
         logging.warning("CSS URLError %s for %s", e.reason, css_url)
+        return None
+    except OSError as e:
+        logging.warning("CSS OSError %s for %s", e, css_url)
         return None
     return raw
 
@@ -142,6 +145,9 @@ def download_binary(url: str) -> bytes | None:
         return None
     except urllib.error.URLError as e:
         logging.warning("Download URLError %s for %s…", e.reason, url[:80])
+        return None
+    except OSError as e:
+        logging.warning("Download OSError %s for %s…", e, url[:80])
         return None
 
 
