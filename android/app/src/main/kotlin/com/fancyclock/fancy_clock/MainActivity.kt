@@ -18,10 +18,14 @@ import android.util.Size
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.MethodChannel
 import kotlin.math.max
 
 class MainActivity : FlutterActivity() {
     private lateinit var ambientCameraStreamHandler: AmbientCameraStreamHandler
+    private val settings by lazy {
+        getSharedPreferences("fancy_clock_settings", Context.MODE_PRIVATE)
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -30,6 +34,26 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             "fancy_clock/ambient_lux"
         ).setStreamHandler(ambientCameraStreamHandler)
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            "fancy_clock/settings"
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "getAmbientCameraEnabled" -> {
+                    result.success(isAmbientCameraEnabled())
+                }
+                "setAmbientCameraEnabled" -> {
+                    val enabled = call.arguments as? Boolean
+                    if (enabled == null) {
+                        result.error("BAD_ARGS", "Expected boolean", null)
+                    } else {
+                        setAmbientCameraEnabled(enabled)
+                        result.success(null)
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -39,6 +63,14 @@ class MainActivity : FlutterActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         ambientCameraStreamHandler.onRequestPermissionsResult(requestCode, grantResults)
+    }
+
+    fun isAmbientCameraEnabled(): Boolean =
+        settings.getBoolean("ambient_camera_enabled", false)
+
+    private fun setAmbientCameraEnabled(enabled: Boolean) {
+        settings.edit().putBoolean("ambient_camera_enabled", enabled).apply()
+        ambientCameraStreamHandler.setEnabled(enabled)
     }
 }
 
@@ -58,6 +90,12 @@ private class AmbientCameraStreamHandler(
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         this.events = events
+        if (!activity.isAmbientCameraEnabled()) {
+            pendingStartAfterPermission = false
+            stopCamera()
+            events?.error("CAMERA_DISABLED", "Ambient camera is disabled", null)
+            return
+        }
         if (activity.checkSelfPermission(Manifest.permission.CAMERA) !=
             PackageManager.PERMISSION_GRANTED
         ) {
@@ -74,12 +112,26 @@ private class AmbientCameraStreamHandler(
         stopCamera()
     }
 
+    fun setEnabled(enabled: Boolean) {
+        if (!enabled) {
+            pendingStartAfterPermission = false
+            stopCamera()
+            return
+        }
+        if (events != null) {
+            startCamera()
+        }
+    }
+
     fun onRequestPermissionsResult(requestCode: Int, grantResults: IntArray) {
         if (requestCode != CAMERA_PERMISSION_REQUEST || !pendingStartAfterPermission) {
             return
         }
         pendingStartAfterPermission = false
-        if (grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED) {
+        if (
+            grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED &&
+            activity.isAmbientCameraEnabled()
+        ) {
             startCamera()
         } else {
             events?.error("CAMERA_DENIED", "Camera permission denied", null)
@@ -88,6 +140,10 @@ private class AmbientCameraStreamHandler(
 
     @SuppressLint("MissingPermission")
     private fun startCamera() {
+        if (!activity.isAmbientCameraEnabled()) {
+            stopCamera()
+            return
+        }
         if (cameraDevice != null) {
             return
         }

@@ -11,6 +11,7 @@ const Color milkBackground = Color.fromRGBO(244, 240, 232, 1.0);
 const int fontPoolTargetSize = 100;
 const Duration fontPoolRotationPeriod = Duration(minutes: 5);
 const double targetDigitHeightRatio = 0.897;
+const MethodChannel settingsChannel = MethodChannel('fancy_clock/settings');
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -250,6 +251,28 @@ Color randomContrastingColor(
   return Colors.white;
 }
 
+Future<bool> loadAmbientCameraEnabled() async {
+  try {
+    return await settingsChannel.invokeMethod<bool>(
+          'getAmbientCameraEnabled',
+        ) ??
+        false;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<void> saveAmbientCameraEnabled(bool enabled) async {
+  try {
+    await settingsChannel.invokeMethod<void>(
+      'setAmbientCameraEnabled',
+      enabled,
+    );
+  } catch (_) {
+    // Keep the in-memory UI state usable even on platforms without the channel.
+  }
+}
+
 class DigitStyle {
   const DigitStyle({
     required this.character,
@@ -300,6 +323,7 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
     return _BootData(
       loadedFonts: pool.loadedFonts,
       remainingFonts: pool.remainingFonts,
+      ambientCameraEnabled: await loadAmbientCameraEnabled(),
     );
   }
 
@@ -333,6 +357,7 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
         return FancyClockScreen(
           fonts: snapshot.data!.loadedFonts,
           remainingFonts: snapshot.data!.remainingFonts,
+          ambientCameraEnabled: snapshot.data!.ambientCameraEnabled,
         );
       },
     );
@@ -353,21 +378,25 @@ class _BootData {
   _BootData({
     required this.loadedFonts,
     required this.remainingFonts,
+    required this.ambientCameraEnabled,
   });
 
   final List<GlyphFont> loadedFonts;
   final List<FontEntry> remainingFonts;
+  final bool ambientCameraEnabled;
 }
 
 class FancyClockScreen extends StatefulWidget {
   const FancyClockScreen({
     required this.fonts,
     this.remainingFonts = const [],
+    this.ambientCameraEnabled = false,
     super.key,
   });
 
   final List<GlyphFont> fonts;
   final List<FontEntry> remainingFonts;
+  final bool ambientCameraEnabled;
 
   @override
   State<FancyClockScreen> createState() => _FancyClockScreenState();
@@ -388,6 +417,7 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   DateTime _lastLightSample = DateTime.fromMillisecondsSinceEpoch(0);
   Color _background = clockBackground;
   bool _brightMode = false;
+  late bool _ambientCameraEnabled;
 
   /// Reacts quickly to flash; slowly tracks ambient room light.
   double _ambientFast = 0.22;
@@ -403,10 +433,13 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     super.initState();
     _activeFonts = List<GlyphFont>.from(widget.fonts);
     _remainingFonts = List<FontEntry>.from(widget.remainingFonts);
+    _ambientCameraEnabled = widget.ambientCameraEnabled;
     WidgetsBinding.instance.addObserver(this);
     _lastShown = DateTime.now().toLocalFormatted();
     slots = _buildSlots(_lastShown);
-    _startAmbientLightSensor();
+    if (_ambientCameraEnabled) {
+      _startAmbientLightSensor();
+    }
     _scheduleAlignedTicker();
     _scheduleFontRotation();
   }
@@ -425,7 +458,9 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _tick(force: true);
-      _startAmbientLightSensor();
+      if (_ambientCameraEnabled) {
+        _startAmbientLightSensor();
+      }
     } else if (state == AppLifecycleState.paused) {
       unawaited(_ambientLightSub?.cancel());
       _ambientLightSub = null;
@@ -433,7 +468,7 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   }
 
   void _startAmbientLightSensor() {
-    if (_ambientLightSub != null) {
+    if (!_ambientCameraEnabled || _ambientLightSub != null) {
       return;
     }
     _ambientLightSub = const EventChannel('fancy_clock/ambient_lux')
@@ -449,6 +484,36 @@ class _FancyClockScreenState extends State<FancyClockScreen>
       },
       cancelOnError: false,
     );
+  }
+
+  void _stopAmbientLightSensor() {
+    unawaited(_ambientLightSub?.cancel());
+    _ambientLightSub = null;
+    _brightMode = false;
+    _switchEvidence = 0;
+    _ambientFast = 0.22;
+    _ambientSlow = 0.22;
+  }
+
+  void _toggleAmbientCamera() {
+    final enabled = !_ambientCameraEnabled;
+    setState(() {
+      _ambientCameraEnabled = enabled;
+      if (!enabled) {
+        _stopAmbientLightSensor();
+        _background = clockBackground;
+        slots = _recolorSlots(_lastShown, clockBackground);
+      }
+    });
+    if (enabled) {
+      unawaited(saveAmbientCameraEnabled(enabled).then((_) {
+        if (mounted && _ambientCameraEnabled) {
+          _startAmbientLightSensor();
+        }
+      }));
+    } else {
+      unawaited(saveAmbientCameraEnabled(enabled));
+    }
   }
 
   void _onAmbientLuma(double luma) {
@@ -656,45 +721,74 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _background,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final side = math.min(constraints.maxWidth, constraints.maxHeight);
-          final fontSize = side * 0.22;
-          return Center(
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final slot in slots)
-                    if (slot.glyphFont case final glyphFont?)
-                      GlyphDigit(
-                        font: glyphFont,
-                        character: slot.character,
-                        color: slot.color,
-                        fontSize: fontSize,
-                      )
-                    else if (slot.character == ':')
-                      ClockSeparator(
-                        color: slot.color,
-                        fontSize: fontSize,
-                      )
-                    else
-                      Text(
-                        slot.character,
-                        style: TextStyle(
-                          fontSize: fontSize,
-                          fontWeight: FontWeight.w500,
-                          color: slot.color,
-                          height: 1.0,
-                        ),
-                      ),
-                ],
+      body: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final side =
+                  math.min(constraints.maxWidth, constraints.maxHeight);
+              final fontSize = side * 0.22;
+              return Center(
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final slot in slots)
+                        if (slot.glyphFont case final glyphFont?)
+                          GlyphDigit(
+                            font: glyphFont,
+                            character: slot.character,
+                            color: slot.color,
+                            fontSize: fontSize,
+                          )
+                        else if (slot.character == ':')
+                          ClockSeparator(
+                            color: slot.color,
+                            fontSize: fontSize,
+                          )
+                        else
+                          Text(
+                            slot.character,
+                            style: TextStyle(
+                              fontSize: fontSize,
+                              fontWeight: FontWeight.w500,
+                              color: slot.color,
+                              height: 1.0,
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: SafeArea(
+              child: IconButton(
+                tooltip: 'Ambient camera',
+                color: _background == clockBackground
+                    ? Colors.white54
+                    : Colors.black54,
+                icon: Icon(
+                  _ambientCameraEnabled
+                      ? Icons.videocam_outlined
+                      : Icons.videocam_off_outlined,
+                ),
+                onPressed: _toggleAmbientCamera,
+                style: IconButton.styleFrom(
+                  backgroundColor: (_background == clockBackground
+                          ? Colors.white
+                          : Colors.black)
+                      .withValues(alpha: 0.08),
+                ),
               ),
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
