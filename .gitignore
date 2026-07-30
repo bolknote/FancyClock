@@ -50,3 +50,6 @@ scripts/.venv/
 # Generated font subsets (regenerate with scripts/fetch_fonts.py)
 assets/fonts/*.ttf
 assets/fonts/*.otf
+
+# Generated digit outlines (regenerate with scripts/extract_glyphs.py)
+assets/glyphs/*.json

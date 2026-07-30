@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
-import 'package:fancy_clock/clock_font_metrics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 const Color clockBackground = Color.fromRGBO(32, 32, 32, 1.0);
 const Color milkBackground = Color.fromRGBO(244, 240, 232, 1.0);
+const int fontPoolTargetSize = 100;
+const Duration fontPoolRotationPeriod = Duration(minutes: 5);
+const double targetDigitHeightRatio = 0.897;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +32,39 @@ class FontEntry {
 
   final String file;
   final String fontFamily;
+
+  String get stem => file.replaceFirst(RegExp(r'\.[^.]+$'), '');
+  String get glyphAsset => 'assets/glyphs/$stem.json';
+}
+
+class GlyphData {
+  const GlyphData({
+    required this.advance,
+    required this.path,
+  });
+
+  final double advance;
+  final ui.Path path;
+}
+
+class GlyphFont {
+  const GlyphFont({
+    required this.entry,
+    required this.unitsPerEm,
+    required this.ascent,
+    required this.descent,
+    required this.visualBounds,
+    required this.glyphs,
+  });
+
+  final FontEntry entry;
+  final double unitsPerEm;
+  final double ascent;
+  final double descent;
+  final ui.Rect visualBounds;
+  final Map<String, GlyphData> glyphs;
+
+  double get lineHeight => ascent - descent;
 }
 
 Future<List<FontEntry>> parseManifestAsset() async {
@@ -65,37 +101,119 @@ Future<List<FontEntry>> parseManifestAsset() async {
   return result;
 }
 
-Future<FontEntry?> tryRegisterFontEntry(FontEntry e) async {
+double _jsonDouble(Object? value) => value is num ? value.toDouble() : 0;
+
+ui.Path _pathFromCommands(Object? rawCommands) {
+  final path = ui.Path();
+  if (rawCommands is! List) {
+    return path;
+  }
+  for (final rawCommand in rawCommands) {
+    if (rawCommand is! List || rawCommand.isEmpty) {
+      continue;
+    }
+    final op = rawCommand.first;
+    if (op == 'M' && rawCommand.length >= 3) {
+      path.moveTo(_jsonDouble(rawCommand[1]), _jsonDouble(rawCommand[2]));
+    } else if (op == 'L' && rawCommand.length >= 3) {
+      path.lineTo(_jsonDouble(rawCommand[1]), _jsonDouble(rawCommand[2]));
+    } else if (op == 'Q' && rawCommand.length >= 5) {
+      path.quadraticBezierTo(
+        _jsonDouble(rawCommand[1]),
+        _jsonDouble(rawCommand[2]),
+        _jsonDouble(rawCommand[3]),
+        _jsonDouble(rawCommand[4]),
+      );
+    } else if (op == 'C' && rawCommand.length >= 7) {
+      path.cubicTo(
+        _jsonDouble(rawCommand[1]),
+        _jsonDouble(rawCommand[2]),
+        _jsonDouble(rawCommand[3]),
+        _jsonDouble(rawCommand[4]),
+        _jsonDouble(rawCommand[5]),
+        _jsonDouble(rawCommand[6]),
+      );
+    } else if (op == 'Z') {
+      path.close();
+    }
+  }
+  return path;
+}
+
+Future<GlyphFont?> tryLoadGlyphFont(FontEntry e) async {
   try {
-    final loader = FontLoader(e.fontFamily);
-    loader.addFont(rootBundle.load('assets/fonts/${e.file}'));
-    await loader.load();
-    if (!clockFontDigitsLookSane(e.fontFamily)) {
+    final raw = await rootBundle.loadString(e.glyphAsset);
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map<String, dynamic>) {
       return null;
     }
-    return e;
+    final rawGlyphs = decoded['glyphs'];
+    if (rawGlyphs is! Map<String, dynamic>) {
+      return null;
+    }
+    final glyphs = <String, GlyphData>{};
+    ui.Rect? visualBounds;
+    for (final ch in '0123456789'.split('')) {
+      final rawGlyph = rawGlyphs[ch];
+      if (rawGlyph is! Map<String, dynamic>) {
+        return null;
+      }
+      final path = _pathFromCommands(rawGlyph['commands']);
+      final bounds = path.getBounds();
+      if (bounds.isEmpty) {
+        return null;
+      }
+      visualBounds =
+          visualBounds == null ? bounds : visualBounds.expandToInclude(bounds);
+      glyphs[ch] = GlyphData(
+        advance: _jsonDouble(rawGlyph['advance']),
+        path: path,
+      );
+    }
+    final bounds = visualBounds;
+    if (bounds == null || bounds.isEmpty) {
+      return null;
+    }
+    return GlyphFont(
+      entry: e,
+      unitsPerEm: _jsonDouble(decoded['unitsPerEm']),
+      ascent: _jsonDouble(decoded['ascent']),
+      descent: _jsonDouble(decoded['descent']),
+      visualBounds: bounds,
+      glyphs: Map<String, GlyphData>.unmodifiable(glyphs),
+    );
   } catch (_) {
     return null;
   }
 }
 
-Future<List<FontEntry>> loadFontsFromManifest(List<FontEntry> entries) async {
+Future<_FontPoolData> _loadInitialFontPool(
+  List<FontEntry> entries, {
+  int targetSize = fontPoolTargetSize,
+}) async {
   if (entries.isEmpty) {
-    return const [];
+    return _FontPoolData(
+      loadedFonts: const [],
+      remainingFonts: const [],
+    );
   }
 
-  final ready = <FontEntry>[];
-  const chunk = 32;
-  for (var i = 0; i < entries.length; i += chunk) {
-    final slice = entries.sublist(i, math.min(i + chunk, entries.length));
-    final results = await Future.wait(slice.map(tryRegisterFontEntry));
-    for (final entry in results) {
-      if (entry != null) {
-        ready.add(entry);
-      }
+  final candidates = List<FontEntry>.from(entries)
+    ..shuffle(math.Random.secure());
+  final ready = <GlyphFont>[];
+  var nextIndex = 0;
+  for (;
+      nextIndex < candidates.length && ready.length < targetSize;
+      nextIndex++) {
+    final font = await tryLoadGlyphFont(candidates[nextIndex]);
+    if (font != null) {
+      ready.add(font);
     }
   }
-  return ready;
+  return _FontPoolData(
+    loadedFonts: ready,
+    remainingFonts: List<FontEntry>.unmodifiable(candidates.sublist(nextIndex)),
+  );
 }
 
 double _linearizeSrgb(double channel) => channel <= 0.03928
@@ -136,12 +254,12 @@ class DigitStyle {
   const DigitStyle({
     required this.character,
     required this.color,
-    this.fontFamily,
+    this.glyphFont,
   });
 
   final String character;
   final Color color;
-  final String? fontFamily;
+  final GlyphFont? glyphFont;
 }
 
 class FancyClockApp extends StatelessWidget {
@@ -178,8 +296,11 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
 
   Future<_BootData> _bootSequence() async {
     final declared = await parseManifestAsset();
-    final loaded = await loadFontsFromManifest(declared);
-    return _BootData(loadedFonts: loaded);
+    final pool = await _loadInitialFontPool(declared);
+    return _BootData(
+      loadedFonts: pool.loadedFonts,
+      remainingFonts: pool.remainingFonts,
+    );
   }
 
   @override
@@ -211,27 +332,42 @@ class _FancyClockBootstrapperState extends State<FancyClockBootstrapper> {
         }
         return FancyClockScreen(
           fonts: snapshot.data!.loadedFonts,
+          remainingFonts: snapshot.data!.remainingFonts,
         );
       },
     );
   }
 }
 
+class _FontPoolData {
+  _FontPoolData({
+    required this.loadedFonts,
+    required this.remainingFonts,
+  });
+
+  final List<GlyphFont> loadedFonts;
+  final List<FontEntry> remainingFonts;
+}
+
 class _BootData {
   _BootData({
     required this.loadedFonts,
+    required this.remainingFonts,
   });
 
-  final List<FontEntry> loadedFonts;
+  final List<GlyphFont> loadedFonts;
+  final List<FontEntry> remainingFonts;
 }
 
 class FancyClockScreen extends StatefulWidget {
   const FancyClockScreen({
     required this.fonts,
+    this.remainingFonts = const [],
     super.key,
   });
 
-  final List<FontEntry> fonts;
+  final List<GlyphFont> fonts;
+  final List<FontEntry> remainingFonts;
 
   @override
   State<FancyClockScreen> createState() => _FancyClockScreenState();
@@ -240,11 +376,14 @@ class FancyClockScreen extends StatefulWidget {
 class _FancyClockScreenState extends State<FancyClockScreen>
     with WidgetsBindingObserver {
   final math.Random _rng = math.Random.secure();
+  late final List<GlyphFont> _activeFonts;
+  late final List<FontEntry> _remainingFonts;
 
   Timer? _timer;
 
   /// One-shot wait until the next minute boundary before starting the 1 Hz ticker.
   Timer? _minuteAlignTimer;
+  Timer? _fontRotationTimer;
   StreamSubscription<double>? _ambientLightSub;
   DateTime _lastLightSample = DateTime.fromMillisecondsSinceEpoch(0);
   Color _background = clockBackground;
@@ -262,11 +401,14 @@ class _FancyClockScreenState extends State<FancyClockScreen>
   @override
   void initState() {
     super.initState();
+    _activeFonts = List<GlyphFont>.from(widget.fonts);
+    _remainingFonts = List<FontEntry>.from(widget.remainingFonts);
     WidgetsBinding.instance.addObserver(this);
     _lastShown = DateTime.now().toLocalFormatted();
     slots = _buildSlots(_lastShown);
     _startAmbientLightSensor();
     _scheduleAlignedTicker();
+    _scheduleFontRotation();
   }
 
   @override
@@ -274,6 +416,7 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     WidgetsBinding.instance.removeObserver(this);
     unawaited(_ambientLightSub?.cancel());
     _minuteAlignTimer?.cancel();
+    _fontRotationTimer?.cancel();
     _timer?.cancel();
     super.dispose();
   }
@@ -394,8 +537,40 @@ class _FancyClockScreenState extends State<FancyClockScreen>
     return _brightMode ? milkBackground : clockBackground;
   }
 
+  void _scheduleFontRotation() {
+    _fontRotationTimer?.cancel();
+    if (_remainingFonts.isEmpty || _activeFonts.isEmpty) {
+      return;
+    }
+    _fontRotationTimer = Timer.periodic(fontPoolRotationPeriod, (_) {
+      unawaited(_rotateOneFont());
+    });
+  }
+
+  Future<void> _rotateOneFont() async {
+    if (!mounted || _remainingFonts.isEmpty || _activeFonts.isEmpty) {
+      return;
+    }
+    final nextIndex = _rng.nextInt(_remainingFonts.length);
+    final next = _remainingFonts.removeAt(nextIndex);
+    final loaded = await tryLoadGlyphFont(next);
+    if (!mounted) {
+      return;
+    }
+    if (loaded == null) {
+      return;
+    }
+    setState(() {
+      final replaceIndex = _rng.nextInt(_activeFonts.length);
+      final replaced = _activeFonts[replaceIndex];
+      _activeFonts[replaceIndex] = loaded;
+      _remainingFonts.add(replaced.entry);
+      slots = _buildSlots(_lastShown);
+    });
+  }
+
   List<DigitStyle> _buildSlots(String hhmmColon) {
-    final families = widget.fonts;
+    final families = _activeFonts;
     return List<DigitStyle>.generate(
       hhmmColon.length,
       (i) {
@@ -404,10 +579,10 @@ class _FancyClockScreenState extends State<FancyClockScreen>
         return DigitStyle(
           character: ch,
           color: randomContrastingColor(_rng, background: _background),
-          fontFamily: isSeparator
+          glyphFont: isSeparator
               ? null
               : (families.isNotEmpty
-                  ? families[_rng.nextInt(families.length)].fontFamily
+                  ? families[_rng.nextInt(families.length)]
                   : null),
         );
       },
@@ -435,7 +610,7 @@ class _FancyClockScreenState extends State<FancyClockScreen>
         return DigitStyle(
           character: ch,
           color: randomContrastingColor(_rng, background: background),
-          fontFamily: isSeparator ? null : old.fontFamily,
+          glyphFont: isSeparator ? null : old.glyphFont,
         );
       },
       growable: false,
@@ -489,21 +664,32 @@ class _FancyClockScreenState extends State<FancyClockScreen>
             child: FittedBox(
               fit: BoxFit.contain,
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   for (final slot in slots)
-                    Text(
-                      slot.character,
-                      style: TextStyle(
-                        fontFamily: slot.fontFamily,
-                        fontSize: fontSize,
-                        fontWeight: FontWeight.w500,
+                    if (slot.glyphFont case final glyphFont?)
+                      GlyphDigit(
+                        font: glyphFont,
+                        character: slot.character,
                         color: slot.color,
-                        height: 1.0,
+                        fontSize: fontSize,
+                      )
+                    else if (slot.character == ':')
+                      ClockSeparator(
+                        color: slot.color,
+                        fontSize: fontSize,
+                      )
+                    else
+                      Text(
+                        slot.character,
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontWeight: FontWeight.w500,
+                          color: slot.color,
+                          height: 1.0,
+                        ),
                       ),
-                    ),
                 ],
               ),
             ),
@@ -512,6 +698,130 @@ class _FancyClockScreenState extends State<FancyClockScreen>
       ),
     );
   }
+}
+
+class GlyphDigit extends StatelessWidget {
+  const GlyphDigit({
+    required this.font,
+    required this.character,
+    required this.color,
+    required this.fontSize,
+    super.key,
+  });
+
+  final GlyphFont font;
+  final String character;
+  final Color color;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final glyph = font.glyphs[character];
+    if (glyph == null) {
+      return Text(
+        character,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w500,
+          color: color,
+          height: 1.0,
+        ),
+      );
+    }
+    final scale = fontSize * targetDigitHeightRatio / font.visualBounds.height;
+    final width = math.max(1.0, glyph.advance * scale);
+    return SizedBox(
+      width: width,
+      height: fontSize,
+      child: CustomPaint(
+        painter: GlyphDigitPainter(
+          font: font,
+          glyph: glyph,
+          color: color,
+          fontSize: fontSize,
+        ),
+      ),
+    );
+  }
+}
+
+class GlyphDigitPainter extends CustomPainter {
+  const GlyphDigitPainter({
+    required this.font,
+    required this.glyph,
+    required this.color,
+    required this.fontSize,
+  });
+
+  final GlyphFont font;
+  final GlyphData glyph;
+  final Color color;
+  final double fontSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = fontSize * targetDigitHeightRatio / font.visualBounds.height;
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = color;
+    canvas.save();
+    final visualCenterY =
+        (font.visualBounds.top + font.visualBounds.bottom) / 2;
+    canvas.translate(0, size.height / 2 + visualCenterY * scale);
+    canvas.scale(scale, -scale);
+    canvas.drawPath(glyph.path, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant GlyphDigitPainter oldDelegate) =>
+      oldDelegate.font != font ||
+      oldDelegate.glyph != glyph ||
+      oldDelegate.color != color ||
+      oldDelegate.fontSize != fontSize;
+}
+
+class ClockSeparator extends StatelessWidget {
+  const ClockSeparator({
+    required this.color,
+    required this.fontSize,
+    super.key,
+  });
+
+  final Color color;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: fontSize * 0.22,
+      height: fontSize,
+      child: CustomPaint(
+        painter: ClockSeparatorPainter(color: color),
+      ),
+    );
+  }
+}
+
+class ClockSeparatorPainter extends CustomPainter {
+  const ClockSeparatorPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = color;
+    final radius = size.height * 0.07;
+    final centerX = size.width / 2;
+    canvas.drawCircle(Offset(centerX, size.height * 0.38), radius, paint);
+    canvas.drawCircle(Offset(centerX, size.height * 0.62), radius, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant ClockSeparatorPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 extension on DateTime {
