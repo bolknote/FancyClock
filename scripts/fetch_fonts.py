@@ -26,7 +26,10 @@ META_USER_AGENT = (
 # Google's CSS endpoints return truetype URLs for legacy desktop / Windows NT user agents.
 CSS_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0"
 REQUIRED_CODEPOINTS = {0x30 + i for i in range(10)}
-BANNED_STEM_RE = re.compile(r"(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode)", re.I)
+BANNED_STEM_RE = re.compile(
+    r"(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode|^Coral_Pixels$)",
+    re.I,
+)
 
 
 def strip_jsonp(payload: str) -> str:
@@ -235,6 +238,20 @@ def run(limit: int, out_dir: Path, manifest_out: Path, polite_delay_s: float) ->
             logging.info("[%d/%d] %s → %s skipped by stem ban", i, len(families), family, slug)
             continue
         out_ttf = out_dir / f"{slug}.ttf"
+        if out_ttf.exists() and verify_cmap(out_ttf):
+            fam_name = read_font_family_name(out_ttf) or family
+            manifest.append({"file": out_ttf.name, "fontFamily": fam_name})
+            logging.info(
+                "[%d/%d] %s → %s reused (usable=%d/%d)",
+                i,
+                len(families),
+                family,
+                out_ttf.name,
+                len(manifest),
+                limit,
+            )
+            continue
+
         logging.info(
             "[%d/%d] %s → %s (usable=%d/%d)",
             i,

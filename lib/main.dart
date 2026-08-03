@@ -79,7 +79,7 @@ Future<List<FontEntry>> parseManifestAsset() async {
   // Guides: educational helper strokes. Flow/Linefont/Barcode encode glyphs
   // as bars or dots instead of digits.
   final bannedStemPattern = RegExp(
-      r'(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode)',
+      r'(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode|^Coral_Pixels$)',
       caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {

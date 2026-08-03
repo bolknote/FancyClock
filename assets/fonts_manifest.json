@@ -164,6 +164,10 @@
     "fontFamily": "Alice"
   },
   {
+    "file": "Alien_Block.ttf",
+    "fontFamily": "Alien Block"
+  },
+  {
     "file": "Alike.ttf",
     "fontFamily": "Alike"
   },
@@ -646,6 +650,10 @@
   {
     "file": "Baloo_2.ttf",
     "fontFamily": "Baloo 2"
+  },
+  {
+    "file": "Baloo_Bhai_2.ttf",
+    "fontFamily": "Baloo Bhai 2"
   },
   {
     "file": "Baloo_Bhaijaan_2.ttf",
@@ -1440,10 +1448,6 @@
     "fontFamily": "Copse"
   },
   {
-    "file": "Coral_Pixels.ttf",
-    "fontFamily": "Coral Pixels"
-  },
-  {
     "file": "Corben.ttf",
     "fontFamily": "Corben"
   },
@@ -2208,6 +2212,10 @@
     "fontFamily": "Geist Mono"
   },
   {
+    "file": "Geist_Pixel.ttf",
+    "fontFamily": "Geist Pixel"
+  },
+  {
     "file": "Gelasio.ttf",
     "fontFamily": "Gelasio"
   },
@@ -2238,6 +2246,10 @@
   {
     "file": "Geom.ttf",
     "fontFamily": "Geom"
+  },
+  {
+    "file": "Geomini.ttf",
+    "fontFamily": "Geomini ExtraLight"
   },
   {
     "file": "Georama.ttf",
@@ -2518,6 +2530,10 @@
   {
     "file": "Hi_Melody.ttf",
     "fontFamily": "Hi Melody"
+  },
+  {
+    "file": "Hibur_Mono.ttf",
+    "fontFamily": "Hibur Mono"
   },
   {
     "file": "Hina_Mincho.ttf",
@@ -3866,6 +3882,10 @@
   {
     "file": "MonteCarlo.ttf",
     "fontFamily": "MonteCarlo"
+  },
+  {
+    "file": "Montenegrin_Gothic_One.ttf",
+    "fontFamily": "Montenegrin Gothic One"
   },
   {
     "file": "Montez.ttf",
@@ -5536,6 +5556,10 @@
     "fontFamily": "Playwrite ZA"
   },
   {
+    "file": "Pliant.ttf",
+    "fontFamily": "Pliant Thin"
+  },
+  {
     "file": "Plus_Jakarta_Sans.ttf",
     "fontFamily": "Plus Jakarta Sans"
   },
@@ -5974,29 +5998,5 @@
   {
     "file": "Rubik.ttf",
     "fontFamily": "Rubik Light"
-  },
-  {
-    "file": "Rubik_80s_Fade.ttf",
-    "fontFamily": "Rubik 80s Fade"
-  },
-  {
-    "file": "Rubik_Beastly.ttf",
-    "fontFamily": "Rubik Beastly"
-  },
-  {
-    "file": "Rubik_Broken_Fax.ttf",
-    "fontFamily": "Rubik Broken Fax"
-  },
-  {
-    "file": "Rubik_Bubbles.ttf",
-    "fontFamily": "Rubik Bubbles"
-  },
-  {
-    "file": "Alien_Block.ttf",
-    "fontFamily": "Alien Block"
-  },
-  {
-    "file": "Baloo_Bhai_2.ttf",
-    "fontFamily": "Baloo Bhai 2"
   }
 ]

@@ -16,7 +16,7 @@ List<({String file, String glyphAsset})> _manifestEntriesFromJson(String raw) {
   final result = <({String file, String glyphAsset})>[];
   final usedFamilies = <String>{};
   final bannedStemPattern = RegExp(
-      r'(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode)',
+      r'(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode|^Coral_Pixels$)',
       caseSensitive: false);
   for (final item in decoded) {
     if (item is Map<String, dynamic>) {

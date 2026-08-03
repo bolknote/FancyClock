@@ -138,6 +138,7 @@ def run(manifest_path: Path, fonts_dir: Path, out_dir: Path) -> int:
         raise RuntimeError(f"{manifest_path} must contain a JSON list")
 
     written = 0
+    expected_json: set[str] = set()
     for item in manifest:
         if not isinstance(item, dict):
             continue
@@ -150,10 +151,20 @@ def run(manifest_path: Path, fonts_dir: Path, out_dir: Path) -> int:
             print(f"missing {ttf}")
             continue
         out_path = out_dir / f"{ttf.stem}.json"
+        expected_json.add(out_path.name)
         extract_font(ttf, out_path, family)
         written += 1
 
+    removed = 0
+    if out_dir.exists():
+        for path in sorted(out_dir.glob("*.json")):
+            if path.name in expected_json:
+                continue
+            path.unlink()
+            removed += 1
+
     print(f"wrote {written} glyph assets to {out_dir}")
+    print(f"removed {removed} stale glyph assets from {out_dir}")
     return 0 if written else 1
 
 
