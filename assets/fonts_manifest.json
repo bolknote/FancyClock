@@ -476,6 +476,10 @@
     "fontFamily": "Asap Condensed"
   },
   {
+    "file": "Asap_Sharp.ttf",
+    "fontFamily": "Asap Sharp"
+  },
+  {
     "file": "Asar.ttf",
     "fontFamily": "Asar"
   },
@@ -1092,6 +1096,10 @@
     "fontFamily": "Bytesized"
   },
   {
+    "file": "Caacupe_One.ttf",
+    "fontFamily": "Caacupe One"
+  },
+  {
     "file": "Cabin.ttf",
     "fontFamily": "Cabin"
   },
@@ -1362,6 +1370,10 @@
   {
     "file": "Cinzel_Decorative.ttf",
     "fontFamily": "Cinzel Decorative"
+  },
+  {
+    "file": "Clarity_City.ttf",
+    "fontFamily": "Clarity City"
   },
   {
     "file": "Clicker_Script.ttf",
@@ -2792,6 +2804,10 @@
     "fontFamily": "Island Moments"
   },
   {
+    "file": "Isometra.ttf",
+    "fontFamily": "Isometra"
+  },
+  {
     "file": "Istok_Web.ttf",
     "fontFamily": "Istok Web"
   },
@@ -3168,6 +3184,10 @@
     "fontFamily": "Kreon Light"
   },
   {
+    "file": "Kripa.ttf",
+    "fontFamily": "Kripa"
+  },
+  {
     "file": "Kristi.ttf",
     "fontFamily": "Kristi"
   },
@@ -3358,6 +3378,10 @@
   {
     "file": "Libre_Bodoni.ttf",
     "fontFamily": "Libre Bodoni"
+  },
+  {
+    "file": "Libre_Caslon_Condensed.ttf",
+    "fontFamily": "Libre Caslon Condensed"
   },
   {
     "file": "Libre_Caslon_Display.ttf",
@@ -5852,14 +5876,6 @@
     "fontFamily": "Red Rose"
   },
   {
-    "file": "Redacted.ttf",
-    "fontFamily": "Redacted"
-  },
-  {
-    "file": "Redacted_Script.ttf",
-    "fontFamily": "Redacted Script"
-  },
-  {
     "file": "Reddit_Mono.ttf",
     "fontFamily": "Reddit Mono"
   },
@@ -5982,21 +5998,5 @@
   {
     "file": "Rosarivo.ttf",
     "fontFamily": "Rosarivo"
-  },
-  {
-    "file": "Rouge_Script.ttf",
-    "fontFamily": "Rouge Script"
-  },
-  {
-    "file": "Rowdies.ttf",
-    "fontFamily": "Rowdies"
-  },
-  {
-    "file": "Rozha_One.ttf",
-    "fontFamily": "Rozha One"
-  },
-  {
-    "file": "Rubik.ttf",
-    "fontFamily": "Rubik Light"
   }
 ]

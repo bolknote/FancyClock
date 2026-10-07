@@ -27,7 +27,7 @@ META_USER_AGENT = (
 CSS_USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0"
 REQUIRED_CODEPOINTS = {0x30 + i for i in range(10)}
 BANNED_STEM_RE = re.compile(
-    r"(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode|^Coral_Pixels$)",
+    r"(_Guides$|Guides$|^Flow_|^Flow$|^Linefont$|Barcode|^Coral_Pixels$|^Redacted(_Script)?$)",
     re.I,
 )
 
